@@ -93,10 +93,10 @@ float perlin(float x, float y) {
 #define TIME 1  // TODO: experiment how much memory esp got
 
 // FastLED Config
-#define LED_DATA_PIN 2 // TODO: change me
+#define LED_DATA_PIN 3 // TODO: change me
 #define LED_ITEMS WIDTH * HEIGHT * TIME
-#define LED_TYPE WS2812B // TODO: change me
-#define LED_COLOR_ORDER RGB
+#define LED_TYPE WS2812B
+#define LED_COLOR_ORDER GRB
 #define LED_BRIGHTNESS 16 // 0 - 255
 #define LED_CORRECTION HighNoonSun
 
