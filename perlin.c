@@ -97,7 +97,7 @@ float perlin(float x, float y) {
 #define LED_ITEMS WIDTH * HEIGHT * TIME
 #define LED_TYPE WS2812B
 #define LED_COLOR_ORDER GRB
-#define LED_BRIGHTNESS 16 // 0 - 255
+#define LED_BRIGHTNESS 32 // 0 - 255
 #define LED_CORRECTION HighNoonSun
 
 CRGB leds[LED_ITEMS]; // Global LEDs array
