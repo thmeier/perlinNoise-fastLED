@@ -50,6 +50,7 @@ float dotGridGradient(int ix, int iy, float x, float y) {
     return (dx*gradient.x + dy*gradient.y);
 }
 
+// TODO: make perlin 3D for time varying output
 // Compute Perlin noise at coordinates x, y
 float perlin(float x, float y) {
     // Determine grid cell coordinates
@@ -87,12 +88,100 @@ float perlin(float x, float y) {
 // // // // // // // // // // // // // // // // // // // //
 // // // // // // // // // // // // // // // // // // // //
 
-void setup() {
+#define WIDTH 16
+#define HEIGHT 16
+#define TIME 1  // TODO: experiment how much memory esp got
 
+// FastLED Config
+#define LED_DATA_PIN 2 // TODO: change me
+#define LED_ITEMS WIDTH * HEIGHT * TIME
+#define LED_TYPE WS2812B // TODO: change me
+#define LED_COLOR_ORDER RGB
+#define LED_BRIGHTNESS 16 // 0 - 255
+#define LED_CORRECTION HighNoonSun
+
+CRGB leds[LED_ITEMS]; // Global LEDs array
+int LOOP_COUNT;
+vector2 noise[TIME][HEIGHT][WIDTH];
+
+// TODO: change me (maybe?)
+void setupSerial() {
+  Serial.begin(SERIAL_BAUD, SERIAL_8N1);
+  delay(2000);
+  Serial.println();
+  Serial.printf("[SERL] Serial initiated (%d baud)\n", SERIAL_BAUD);
+}
+
+void turnOffLeds() { 
+  for (int i = 0; i < LED_ITEMS; i++) { leds[i] = CRGB::Black; }
+  FastLED.show();
+}
+
+void setupFastLed() {
+  Serial.println("[LEDS] Initiating LEDs...");
+
+  FastLED.addLeds<LED_TYPE, LED_DATA_PIN, LED_COLOR_ORDER>(leds, LED_ITEMS);
+  FastLED.setCorrection(LED_CORRECTION);
+  FastLED.setBrightness(ledBrightness);
+
+  turnOffLeds();
+  FastLED.show();
+
+  Serial.println("[LEDS] Initiated LEDs");
+}
+
+void setup() {
+    setupSerial();
+    setupFastLed();
+
+    LOOP_COUNT = 0;
+    noise = { 0.0 };
+
+    // precompute 3D volume of perlin noise ,
+    // one dimension for time and the othersf
+
+    for (int t = 0; t < TIME; ++t) {
+
+        // precompute screen at frame t
+
+        if (t % 10) {
+            Serial.printf("[INFO] Precomputing: %f%\n", t / TIME);
+        }
+
+        for (int ix = 0; ix < HEIGHT; ++ix) {
+            for (int iy = 0; iy < WIDTH; ++iy) {
+                noise[t][ix][iy] = perlin((float)ix, (float)iy);
+            }
+        }
+    }
+
+    Serial.printf("[INFO] Precomputing: done\n");
 }
 
 void loop() {
 
+    int t = LOOP_COUNT % TIME;
 
-  LOOP_COUNT++;
+    Serial.printf("[INFO] Iteration: %d % %d = %d\n", LOOP_COUNT, TIME, t);
+
+    for (int ix = 0; ix < HEIGHT; ++ix) {
+
+        Serial.printf("[DATA] ");
+
+        for (int iy = 0; iy < WIDTH; ++iy) {
+            // primitively map float to rgb 
+            // (TODO: make map to a visually more pleasing spectrum)
+            bool hilo = noise[t][ix][iy] > 0.5;
+            leds[ix * WIDTH + iy] = hilo ? CRGB::White : CRGB::Black;
+            Serial.printf("%s", hilo ? "1" : "0");
+        }
+
+        Serial.printf("\n");
+    }
+    
+    Serial.printf("\n");
+
+    FastLED.(show);
+    delay(10000);
+    LOOP_COUNT++;
 }
